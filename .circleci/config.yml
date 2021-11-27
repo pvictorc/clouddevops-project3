@@ -9,7 +9,7 @@ jobs:
       # - restore-cache:
       #     keys: [frontend-build]
       - run:
-          name: backend build
+          name: build frontend 
           command: |
             cd frontend
             npm install
