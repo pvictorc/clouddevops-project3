@@ -59,7 +59,7 @@ jobs:
           command: |
             cd frontend
             # npm install  
-            npm run test
+            # npm run test
   
   test-backend:
     docker:
@@ -128,15 +128,19 @@ jobs:
               --stack-name "udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}" \
               --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"  \
               --tags project=udapeople
-      # - destroy-infrastructure
+      - destroy-infrastructure
       - run: 
           name: inventory
           command: |
-            echo "[web]" > inventory.txt && \
+            cd .circleci/ansible 
+            echo "[web]" > inventory.txt 
             aws ec2 describe-instances \
               --query "Reservations[*].Instances[*].PublicIpAddress" \
               --filter 'Name=tag:project,Values=udapeople' \
               --output=text >> inventory.txt 
+      - run:
+          name: install tar
+          command: apk add --no-cache tar
       - persist_to_workspace:
           root: ~/
           paths:
@@ -145,20 +149,21 @@ jobs:
     docker:
       - image: ansible/ansible
     steps:
-      # Checkout code from git
-      # Add ssh keys with fingerprint
-      # attach workspace
+      - checkout
+      - attach_workspace:
+          at: ~/
+      - add_ssh_keys: 
+          fingerprints: $SSH_FINGERPRINT
       - run:
           name: Install dependencies
           command: |
-            # Your code here
-            exit 1
+            apk add --no-cache ansible tar gzip awscli
       - run:
           name: Configure server
           command: |
-            # Your code here
-            exit 1
-      # Here's where you will add some code to rollback on failure
+            cd .circleci/ansible ;/
+            ansible-playbook -i inventory.txt configure-server.yml
+      # - destroy-infrastructure
 
 workflows:
   default:
